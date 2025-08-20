@@ -1,0 +1,57 @@
+#raw_html,
+#raw_html *,
+#raw_html *::before,
+#raw_html *::after {
+    all: revert;
+}
+
+input:focus-visible {
+    outline: none;
+}
+
+li {
+    list-style: none;
+}
+
+.list {
+    position: relative;
+    margin-left: 230;
+    display: inline-block;
+}
+
+.list li {
+ border: 4px solid transparent ;
+}
+.list li div {
+    width: 150px;
+    height: 150px;
+}
+
+@keyframes wheel {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+}
+
+.wheel__animate {
+    animation: wheel 10s linear infinite;
+}
+
+@keyframes breath {
+    0% {
+      transform: scale(1);
+    }
+    50%{
+        transform: scale(1.2);
+    }
+    100% {
+      transform: scale(1);
+    }
+}
+
+.breath__animate {
+    animation: breath 3s linear infinite;
+}

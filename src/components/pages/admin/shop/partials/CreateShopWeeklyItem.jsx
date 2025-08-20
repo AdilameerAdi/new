@@ -1,0 +1,151 @@
+import React, { useState } from 'react'
+import { Input } from '../../../../elements/Input'
+import { BarcodeScanner, Coin, Package } from '../../../../../../public/icons/Svg'
+import { SwitchCustom } from '../../../../elements/SwitchCustom'
+import { SecondaryButton } from '../../../../elements/SecondaryButton'
+import { PrimaryButton } from '../../../../elements/PrimaryButton'
+import Modal from '../../../../elements/Modal'
+import { useDispatch } from 'react-redux'
+import { useForm } from 'react-hook-form'
+import apiConfig from '../../../../../utils/apiConfig'
+import axios from 'axios'
+import { setLoad } from '../../../../../store/slices/loader.slice'
+import Swal from 'sweetalert2'
+import appError from '../../../../../utils/appError'
+import { shopWeeklyItemsThunk } from '../../../../../store/slices/shopWeeklyItems.slice'
+
+export const CreateShopWeeklyItem = ({ newModal, setNewModal }) => {
+
+    const dispatch = useDispatch()
+
+    const { register, handleSubmit, watch, reset, formState: { errors }} = useForm();
+  
+    const [stackeable, setStackeable] = useState(false)
+    const [status, setStatus] = useState(false)
+
+    const submit = async (data) => {
+        const url = `${apiConfig().endpoint}/shop/weekly`
+    
+        const body = {
+            vnum: data.vnum,
+            stackeable,
+            stack: data.stack || 1,
+            price: data.price,
+            status: status
+        }
+    
+        dispatch(setLoad(false));
+    
+        await axios.post(url, body, apiConfig().axios)
+            .then(() => {
+                Swal.fire({
+                    toast: true,
+                    position: 'bottom-right',
+                    icon: 'success',
+                    text: 'The shop item was created successfully!',
+                    showConfirmButton: false,
+                    timer: 5000,
+                    timerProgressBar: true,
+                });
+            })
+            .catch(err => {
+                appError(err)
+                Swal.fire({
+                    toast: true,
+                    position: 'bottom-right',
+                    icon: 'error',
+                    text: err.response.data.message,
+                    showConfirmButton: false,
+                    timer: 5000,
+                    timerProgressBar: true,
+                });
+            })
+            .finally(() => {
+                reset()
+                setNewModal(false)
+                dispatch(shopWeeklyItemsThunk(true))
+                dispatch(setLoad(true))
+            })
+    }
+
+    return (
+        <Modal
+            open={newModal}
+            setOpen={setNewModal}
+            title={'Create shop weekly item'}
+        >
+            <form className="flex flex-col gap-4" onSubmit={handleSubmit(submit)}>
+                <Input
+                    icon={<BarcodeScanner />}
+                    id="vnum"
+                    name="vnum"
+                    type="number"
+                    label="VNum"
+                    min="1"
+                    placeholder="Insert vnum"
+                    register={{
+                        function: register,
+                        errors: {
+                        function: errors,
+                        rules: { required: 'VNum is required' },
+                        },
+                    }}
+                    element={
+                        <SwitchCustom
+                            checked={status}
+                            setChecked={setStatus}
+                            label="Status"
+                        />                             
+                    }
+                />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <Input
+                        icon={<Coin />}
+                        id="price"
+                        name="price"
+                        type="number"
+                        label="Price"
+                        min="1"
+                        placeholder="Insert price"
+                        register={{
+                            function: register,
+                            errors: {
+                                function: errors,
+                                rules: { required: 'Price is required' },
+                            },
+                        }}
+
+                    />
+                    <Input
+                        icon={<Package />}
+                        id="stack"
+                        name="stack"
+                        type="number"
+                        label="Stackeable"
+                        min="1"
+                        max="999"
+                        placeholder="Insert stack"
+                        disabled={!stackeable}
+                        defaultValue="1"
+                        element={
+                            <SwitchCustom
+                                checked={stackeable}
+                                setChecked={setStackeable}
+                            />
+                        }
+                        register={{
+                            function: register,
+                            errors: {
+                            function: errors,
+                            },
+                        }}
+                    />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <SecondaryButton type="button" onClick={() => setNewModal(false)}>Cancel</SecondaryButton>
+                    <PrimaryButton type="submit">Accept</PrimaryButton>
+                </div>
+            </form>
+        </Modal>
+    )
+}
